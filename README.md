@@ -1,8 +1,6 @@
 # A 股数据采集 Skill
 
-只做公开数据采集，输出 JSON / JSONL / CSV。
-
-不包含：早报、晚报、链路评分、LLM 审核、预测验证、自进化、投资结论。
+面向 Hermes 用户的 A 股与商品数据采集 skill，支持公开行情和新闻数据采集，输出 JSON / JSONL / CSV。
 
 ## 安装
 
@@ -12,7 +10,7 @@ cd hermes-a-share-market-data-pack
 ./install.sh --test
 ```
 
-安装到指定 Hermes profile：
+指定 Hermes profile：
 
 ```bash
 HERMES_HOME=~/.hermes/profiles/your-profile ./install.sh --test
