@@ -1,20 +1,20 @@
-# Hermes A-share Data Collection Skill
+# Hermes A 股数据采集 Skill
 
-A **data-collection-only** Hermes skill and script pack for Chinese A-share / raw-material workflows.
+这是一个面向中国 A 股 / 原材料研究流程的 Hermes skill 与脚本包，定位是：只做数据采集。
 
-This repository intentionally does **not** include:
+本仓库刻意不包含：
 
-- morning reports;
-- evening reports;
-- commodity → board link scoring;
-- LLM audit;
-- prediction validation;
-- self-evolution / candidate promotion;
-- investment conclusions.
+- 早报生成；
+- 晚报生成；
+- 商品 → 板块链路评分；
+- LLM 审核；
+- 预测验证；
+- 自进化 / 候选链路晋升；
+- 投资结论。
 
-It only installs a reusable Hermes skill plus a raw data collector that fetches public market/news data and exports normalized JSON/JSONL/CSV rows.
+它只安装一个可复用的 Hermes skill，以及一个原始数据采集脚本，用于从公开行情 / 新闻接口抓取数据，并导出标准化的 JSON、JSONL 或 CSV 行数据。
 
-## What this repo installs
+## 仓库内容
 
 ```text
 .
@@ -28,7 +28,7 @@ It only installs a reusable Hermes skill plus a raw data collector that fetches 
     └── test_collector_core.py
 ```
 
-After installation:
+安装后会写入：
 
 ```text
 $HERMES_HOME/scripts/a_share_data_collector.py
@@ -36,35 +36,35 @@ $HERMES_HOME/venvs/a_share_data/bin/python
 $HERMES_HOME/skills/data-science/a-share-data-collection/SKILL.md
 ```
 
-## Data sources
+## 数据来源
 
-| Data | Source | Interface / wrapper | Notes |
+| 数据类型 | 来源 | 接口 / 封装 | 说明 |
 |---|---|---|---|
-| Domestic commodity futures quotes | Sina Finance | `https://hq.sinajs.cn/list=...` | Continuous futures quote snapshots such as `nf_AG0`, `nf_PG0`, `nf_LC0`. |
-| Domestic commodity futures minute lines | Sina Finance | `InnerFuturesNewService.getMinLine` | Raw minute-level price/volume rows. |
-| Domestic commodity futures daily K-lines | Sina Finance | `InnerFuturesNewService.getDailyKLine` | Daily OHLCV rows; script calculates pct change and amplitude when previous close is available. |
-| A-share index quotes | Sina Finance | `s_sh000001`, `s_sz399001`, `s_sz399006` | Shanghai Composite, Shenzhen Component, ChiNext. |
-| A-share industry board daily history | AKShare / 同花顺 | `stock_board_industry_index_ths` | Requires exact 同花顺 industry board name. |
-| A-share concept board daily history | AKShare / 同花顺 | `stock_board_concept_index_ths` | Requires exact 同花顺 concept board name. |
-| Finance news | Eastmoney | `np-listapi.eastmoney.com/comm/web/getNewsByColumns` | Raw news title/body/url rows. |
-| Live news | WallstreetCN | `api-prod.wallstreetcn.com/apiv1/content/lives` | Raw live-news rows from configured channels. |
+| 国内商品期货快照 | 新浪财经 | `https://hq.sinajs.cn/list=...` | 采集连续合约快照，如 `nf_AG0`、`nf_PG0`、`nf_LC0`。 |
+| 国内商品期货分钟线 | 新浪财经 | `InnerFuturesNewService.getMinLine` | 采集分钟级价格 / 成交量原始行。 |
+| 国内商品期货日 K | 新浪财经 | `InnerFuturesNewService.getDailyKLine` | 采集日线 OHLCV；如果有前收盘价，脚本会计算涨跌幅和振幅。 |
+| A 股指数快照 | 新浪财经 | `s_sh000001`、`s_sz399001`、`s_sz399006` | 上证指数、深证成指、创业板指。 |
+| A 股行业板块日线 | AKShare / 同花顺 | `stock_board_industry_index_ths` | 需要传入准确的同花顺行业板块名称。 |
+| A 股概念板块日线 | AKShare / 同花顺 | `stock_board_concept_index_ths` | 需要传入准确的同花顺概念板块名称。 |
+| 财经新闻 | 东方财富 | `np-listapi.eastmoney.com/comm/web/getNewsByColumns` | 采集新闻标题、正文、URL 等原始行。 |
+| 实时快讯 | 华尔街见闻 | `api-prod.wallstreetcn.com/apiv1/content/lives` | 按配置频道采集实时快讯原始行。 |
 
-## Suggested collection frequency
+## 建议采集频率
 
-This repository does not create scheduled jobs automatically. If you wire it into cron / Hermes cron / Airflow / another scheduler, common frequencies are:
+本仓库不会自动创建定时任务。你可以接入系统 cron、Hermes cron、Airflow 或其他调度器。常见频率如下：
 
-| Dataset | Suggested cadence |
+| 数据集 | 建议频率 |
 |---|---:|
-| Commodity quote snapshots | Every 1-5 minutes during futures trading sessions. |
-| Commodity minute lines | Every 5-15 minutes, or once immediately after your target window closes. |
-| Commodity daily K-lines | Once per day after settlement / session close, or on demand for backfills. |
-| A-share index quotes | Every 1-5 minutes during A-share trading hours. |
-| A-share board daily history | Once after A-share close, or on demand for historical ranges. |
-| Eastmoney / WallstreetCN news | Every 5-15 minutes for event monitoring. |
+| 商品期货快照 | 期货交易时段内每 1-5 分钟一次。 |
+| 商品期货分钟线 | 每 5-15 分钟一次，或在目标窗口结束后立即采集一次。 |
+| 商品期货日 K | 每日结算 / 收盘后一次，或按需回补历史。 |
+| A 股指数快照 | A 股交易时段内每 1-5 分钟一次。 |
+| A 股板块日线 | A 股收盘后一次，或按历史区间按需采集。 |
+| 东方财富 / 华尔街见闻新闻 | 事件监控场景下每 5-15 分钟一次。 |
 
-Please respect each public data source's terms of service and rate limits.
+使用公开数据源时，请遵守对应网站的服务条款和访问频率限制。
 
-## Install
+## 安装
 
 ```bash
 git clone https://github.com/GeniusDream/hermes-a-share-market-data-pack.git
@@ -72,15 +72,15 @@ cd hermes-a-share-market-data-pack
 ./install.sh --test
 ```
 
-Install into another Hermes profile:
+安装到其他 Hermes profile：
 
 ```bash
 HERMES_HOME=~/.hermes/profiles/your-profile ./install.sh --test
 ```
 
-## Usage examples
+## 使用示例
 
-### Commodity quotes
+### 采集商品期货快照
 
 ```bash
 ~/.hermes/venvs/a_share_data/bin/python \
@@ -90,7 +90,7 @@ HERMES_HOME=~/.hermes/profiles/your-profile ./install.sh --test
   --format json
 ```
 
-### Commodity minute lines
+### 采集商品期货分钟线
 
 ```bash
 ~/.hermes/venvs/a_share_data/bin/python \
@@ -101,7 +101,7 @@ HERMES_HOME=~/.hermes/profiles/your-profile ./install.sh --test
   --output /tmp/commodity_minline.jsonl
 ```
 
-### Commodity daily K-lines
+### 采集商品期货日 K
 
 ```bash
 ~/.hermes/venvs/a_share_data/bin/python \
@@ -112,9 +112,9 @@ HERMES_HOME=~/.hermes/profiles/your-profile ./install.sh --test
   --output /tmp/commodity_daily.csv
 ```
 
-### A-share board daily history / daily moves
+### 采集 A 股板块日线 / 当日变化
 
-Include at least one prior trading day so `pct_chg` and `amplitude` can be calculated against previous close.
+建议至少包含前一个交易日，这样脚本才能根据前收盘价计算 `pct_chg` 和 `amplitude`。
 
 ```bash
 ~/.hermes/venvs/a_share_data/bin/python \
@@ -126,7 +126,7 @@ Include at least one prior trading day so `pct_chg` and `amplitude` can be calcu
   --format json
 ```
 
-If the automatic industry/concept lookup fails, specify the board type:
+如果自动判断行业 / 概念板块失败，可以显式指定板块类型：
 
 ```bash
 ~/.hermes/venvs/a_share_data/bin/python \
@@ -138,7 +138,7 @@ If the automatic industry/concept lookup fails, specify the board type:
   --end-date 2026-06-10
 ```
 
-### A-share index quotes
+### 采集 A 股指数快照
 
 ```bash
 ~/.hermes/venvs/a_share_data/bin/python \
@@ -147,7 +147,7 @@ If the automatic industry/concept lookup fails, specify the board type:
   --format json
 ```
 
-### News
+### 采集新闻
 
 ```bash
 ~/.hermes/venvs/a_share_data/bin/python \
@@ -161,7 +161,7 @@ If the automatic industry/concept lookup fails, specify the board type:
   --format jsonl
 ```
 
-## CLI reference
+## 命令行参数
 
 ```bash
 python a_share_data_collector.py \
@@ -175,9 +175,9 @@ python a_share_data_collector.py \
   [--output /path/to/file]
 ```
 
-## Output schema
+## 输出结构
 
-Each row is normalized to a common shape:
+每一行数据会被标准化为同一结构：
 
 ```json
 {
@@ -202,9 +202,9 @@ Each row is normalized to a common shape:
 }
 ```
 
-`raw` preserves source-specific payloads for debugging or downstream parsing.
+其中 `raw` 会保留数据源的原始字段，方便排查接口变化或做下游解析。
 
-## Test
+## 测试
 
 ```bash
 bash -n install.sh
@@ -212,18 +212,18 @@ python3 -m py_compile scripts/a_share_data_collector.py
 PYTHONPATH=scripts python3 -m pytest tests -q
 ```
 
-Or run the installer test in an isolated temp Hermes home:
+也可以用临时 Hermes home 跑安装器自测：
 
 ```bash
 tmp=$(mktemp -d)
 HERMES_HOME="$tmp" ./install.sh --test
 ```
 
-## Notes
+## 说明
 
-- Continuous futures symbols like `nf_AG0` are for continuous chart/data series, not tradable contract codes.
-- Public web interfaces can fail or change; keep `raw` payloads and retry conservatively.
-- This repo is a data collection utility, not an investment recommendation system.
+- `nf_AG0` 这类连续合约代码用于连续行情 / 图表数据，不是实际可交易合约代码。
+- 公开网页接口可能失败或变更；建议保留 `raw` 原始载荷，并对采集请求做保守重试。
+- 本仓库只是数据采集工具，不是投资建议系统。
 
 ## License
 
