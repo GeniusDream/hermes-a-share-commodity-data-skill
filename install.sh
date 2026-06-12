@@ -14,7 +14,7 @@ for arg in "$@"; do
       cat <<EOF
 Usage: ./install.sh [--test]
 
-Installs the A-share data-collection-only Hermes skill and collector script into:
+Installs the A-share and commodity data-collection Hermes skill and collector script into:
   HERMES_HOME=$HERMES_HOME
 
 Options:
