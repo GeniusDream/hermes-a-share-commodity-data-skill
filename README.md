@@ -106,8 +106,8 @@ Hermes skill for collecting Chinese commodity futures, A-share index, A-share bo
 ## 安装
 
 ```bash
-git clone https://github.com/GeniusDream/hermes-a-share-market-data-pack.git
-cd hermes-a-share-market-data-pack
+git clone https://github.com/GeniusDream/hermes-a-share-commodity-data-skill.git
+cd hermes-a-share-commodity-data-skill
 ./install.sh --test
 ```
 
