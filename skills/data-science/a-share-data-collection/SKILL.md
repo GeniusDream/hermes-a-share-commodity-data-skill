@@ -19,6 +19,7 @@ Use this skill when the user asks to **collect / scrape / fetch raw data** for C
 - domestic commodity futures quotes, minute lines, or daily K-lines;
 - A-share index quotes;
 - A-share industry/concept board daily history;
+- A-share industry/concept board-name listing and keyword search;
 - Eastmoney finance news;
 - WallstreetCN live news;
 - exporting collected rows as JSON, JSONL, or CSV.
@@ -84,6 +85,22 @@ $HERMES_HOME/venvs/a_share_data/bin/python \
 ```
 
 The collector tries 同花顺 industry first and concept second by default. Override with `--board-type industry` or `--board-type concept` when you already know the board type.
+
+### A-share board-name listing and search
+
+```bash
+$HERMES_HOME/venvs/a_share_data/bin/python \
+  $HERMES_HOME/scripts/a_share_data_collector.py \
+  --list-boards industry \
+  --format csv
+
+$HERMES_HOME/venvs/a_share_data/bin/python \
+  $HERMES_HOME/scripts/a_share_data_collector.py \
+  --search-board 锂 \
+  --format json
+```
+
+`--search-board` defaults to searching both industry and concept boards unless `--list-boards industry|concept` narrows the type.
 
 ### Index quotes
 

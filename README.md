@@ -33,6 +33,7 @@ $HERMES_HOME/skills/data-science/a-share-data-collection/SKILL.md
 | 商品期货日 K | 新浪财经 | `--source commodity-daily` |
 | A 股指数快照 | 新浪财经 | `--source index-quotes` |
 | A 股行业 / 概念板块日线 | AKShare / 同花顺 | `--source board-history` |
+| A 股行业 / 概念板块名称列表 | AKShare / 同花顺 | `--list-boards industry|concept|all` |
 | 东方财富新闻 | 东方财富 | `--source news-eastmoney` |
 | 华尔街见闻快讯 | 华尔街见闻 | `--source news-wscn` |
 
@@ -55,6 +56,8 @@ $HERMES_HOME/skills/data-science/a-share-data-collection/SKILL.md
   [--symbols 白银连续,nf_PG0,自定义=自定义代码] \
   [--boards 电池,锂电池概念] \
   [--board-type auto|industry|concept] \
+  [--list-boards industry|concept|all] \
+  [--search-board 关键词] \
   [--start-date YYYY-MM-DD] \
   [--end-date YYYY-MM-DD] \
   [--format json|jsonl|csv] \
@@ -104,6 +107,20 @@ $HERMES_HOME/skills/data-science/a-share-data-collection/SKILL.md
   --boards 电池,锂电池概念,贵金属,养鸡 \
   --start-date 2026-06-08 \
   --end-date 2026-06-10 \
+  --format json
+```
+
+列出 / 搜索板块名：
+
+```bash
+~/.hermes/venvs/a_share_data/bin/python \
+  ~/.hermes/scripts/a_share_data_collector.py \
+  --list-boards industry \
+  --format csv
+
+~/.hermes/venvs/a_share_data/bin/python \
+  ~/.hermes/scripts/a_share_data_collector.py \
+  --search-board 锂 \
   --format json
 ```
 

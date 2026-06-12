@@ -1,4 +1,10 @@
-from a_share_data_collector import Row, parse_symbols, DEFAULT_COMMODITY_CODES, emit
+from a_share_data_collector import (
+    DEFAULT_COMMODITY_CODES,
+    Row,
+    emit,
+    format_board_name_rows,
+    parse_symbols,
+)
 import json
 
 
@@ -14,6 +20,20 @@ def test_default_commodity_universe_is_broad():
     assert DEFAULT_COMMODITY_CODES['碳酸锂连续'] == 'nf_LC0'
     assert DEFAULT_COMMODITY_CODES['集运指数欧线连续'] == 'nf_EC0'
     assert DEFAULT_COMMODITY_CODES['丙烯连续'] == 'nf_PL0'
+
+
+def test_format_board_name_rows_filters_keyword():
+    records = [
+        {'name': '电池', 'code': '881166'},
+        {'name': '锂电池概念', 'code': '308508'},
+        {'name': '贵金属', 'code': '881155'},
+    ]
+    rows = format_board_name_rows(records, 'concept', keyword='电池')
+    assert [r.name for r in rows] == ['电池', '锂电池概念']
+    assert rows[0].source == 'akshare_ths'
+    assert rows[0].dataset == 'a_share_board_name'
+    assert rows[0].code == '881166'
+    assert rows[0].raw == {'board_type': 'concept'}
 
 
 def test_emit_jsonl(tmp_path):

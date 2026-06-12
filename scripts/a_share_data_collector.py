@@ -255,6 +255,45 @@ def collect_sina_indices(symbols: dict[str, str]) -> list[Row]:
     return rows
 
 
+def format_board_name_rows(records: Iterable[dict[str, Any]], board_type: str, keyword: str | None = None) -> list[Row]:
+    rows: list[Row] = []
+    for record in records:
+        name = str(record.get("name") or record.get("板块名称") or record.get("名称") or "").strip()
+        if not name:
+            continue
+        code = record.get("code") or record.get("板块代码") or record.get("代码")
+        if keyword and keyword not in name:
+            continue
+        rows.append(Row(
+            source="akshare_ths",
+            dataset="a_share_board_name",
+            name=name,
+            code=str(code) if code is not None else None,
+            raw={"board_type": board_type},
+        ))
+    return rows
+
+
+def collect_board_names(board_type: str = "all", keyword: str | None = None) -> list[Row]:
+    import akshare as ak  # lazy import: only required for board names/history
+
+    sources: list[tuple[str, Any]] = []
+    if board_type in ("industry", "all"):
+        sources.append(("industry", ak.stock_board_industry_name_ths))
+    if board_type in ("concept", "all"):
+        sources.append(("concept", ak.stock_board_concept_name_ths))
+
+    rows: list[Row] = []
+    for actual_type, fn in sources:
+        try:
+            df = fn()
+            records = df.to_dict("records") if hasattr(df, "to_dict") else list(df)
+            rows.extend(format_board_name_rows(records, actual_type, keyword))
+        except Exception as exc:
+            rows.append(Row(source="akshare_ths", dataset="a_share_board_name_error", raw={"board_type": actual_type, "error": repr(exc)}))
+    return rows
+
+
 def collect_board_history(boards: list[str], start_date: str, end_date: str, board_type: str = "auto") -> list[Row]:
     import akshare as ak  # lazy import: only required for board history
     import pandas as pd
@@ -387,13 +426,23 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--symbols", help="Comma-separated known commodity names/codes, or name=code pairs. Defaults to built-in commodity universe.")
     parser.add_argument("--boards", help="Comma-separated A-share board names for --source board-history, e.g. 电池,贵金属,养鸡")
     parser.add_argument("--board-type", choices=["auto", "industry", "concept"], default="auto")
+    parser.add_argument("--list-boards", choices=["industry", "concept", "all"], help="List available 同花顺 A-share board names and codes, then exit.")
+    parser.add_argument("--search-board", help="Filter board-name listing by keyword, e.g. 锂 or 电池.")
     parser.add_argument("--start-date", default=(dt.date.today() - dt.timedelta(days=5)).isoformat())
     parser.add_argument("--end-date", default=dt.date.today().isoformat())
     parser.add_argument("--format", choices=["json", "jsonl", "csv"], default="json")
     parser.add_argument("--output", help="Output file. Defaults to stdout.")
     args = parser.parse_args(argv)
 
+    if args.search_board and not args.list_boards:
+        args.list_boards = "all"
+
     rows: list[Row] = []
+    if args.list_boards:
+        rows = collect_board_names(args.list_boards, args.search_board)
+        emit(rows, args.format, args.output)
+        return 0
+
     commodity_symbols = parse_symbols(args.symbols, DEFAULT_COMMODITY_CODES)
     if args.source in ("commodity-quotes", "all"):
         rows += collect_sina_commodity_quotes(commodity_symbols)
