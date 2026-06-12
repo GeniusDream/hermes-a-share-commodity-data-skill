@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
-"""Pure data-collection helpers for A-share/raw-material workflows.
-
-This script intentionally does NOT generate morning/evening reports, score links,
-run LLM audits, or maintain prediction/analysis state. It only fetches public data
-and writes normalized JSON/CSV rows.
-"""
+"""Collect A-share, commodity futures, index, and news data as JSON/JSONL/CSV."""
 from __future__ import annotations
 
 import argparse
@@ -21,42 +16,88 @@ from dataclasses import asdict, dataclass
 from typing import Any, Iterable
 
 DEFAULT_COMMODITY_CODES = {
-    # Sina Inner Futures symbols used by hq.sinajs.cn and minline/daily APIs.
-    "白银连续": "nf_AG0",
-    "沪金连续": "nf_AU0",
+    # Sina domestic continuous futures symbols verified via hq.sinajs.cn.
+    # SHFE / INE
     "沪铜连续": "nf_CU0",
     "沪铝连续": "nf_AL0",
     "沪锌连续": "nf_ZN0",
     "沪铅连续": "nf_PB0",
     "沪镍连续": "nf_NI0",
     "沪锡连续": "nf_SN0",
+    "氧化铝连续": "nf_AO0",
     "螺纹钢连续": "nf_RB0",
+    "线材连续": "nf_WR0",
     "热卷连续": "nf_HC0",
-    "铁矿石连续": "nf_I0",
-    "焦煤连续": "nf_JM0",
-    "焦炭连续": "nf_J0",
-    "玻璃连续": "nf_FG0",
-    "纯碱连续": "nf_SA0",
-    "原油连续": "nf_SC0",
+    "不锈钢连续": "nf_SS0",
+    "黄金连续": "nf_AU0",
+    "白银连续": "nf_AG0",
     "燃油连续": "nf_FU0",
-    "液化石油气连续": "nf_PG0",
     "沥青连续": "nf_BU0",
-    "甲醇连续": "nf_MA0",
-    "PTA连续": "nf_TA0",
-    "PVC连续": "nf_V0",
-    "PP连续": "nf_PP0",
-    "塑料连续": "nf_L0",
-    "尿素连续": "nf_UR0",
     "橡胶连续": "nf_RU0",
+    "纸浆连续": "nf_SP0",
+    "丁二烯橡胶连续": "nf_BR0",
+    "铸造铝合金连续": "nf_AD0",
+    "胶版印刷纸连续": "nf_OP0",
+    "原油连续": "nf_SC0",
+    "20号胶连续": "nf_NR0",
+    "低硫燃料油连续": "nf_LU0",
+    "国际铜连续": "nf_BC0",
+    "集运指数欧线连续": "nf_EC0",
+
+    # GFEX
+    "工业硅连续": "nf_SI0",
     "碳酸锂连续": "nf_LC0",
-    "鸡蛋连续": "nf_JD0",
+    "多晶硅连续": "nf_PS0",
+    "铂连续": "nf_PT0",
+    "钯连续": "nf_PD0",
+
+    # DCE
+    "豆一连续": "nf_A0",
+    "豆二连续": "nf_B0",
     "豆粕连续": "nf_M0",
     "豆油连续": "nf_Y0",
     "棕榈油连续": "nf_P0",
     "玉米连续": "nf_C0",
-    "棉花连续": "nf_CF0",
-    "白糖连续": "nf_SR0",
+    "玉米淀粉连续": "nf_CS0",
+    "鸡蛋连续": "nf_JD0",
     "生猪连续": "nf_LH0",
+    "粳米连续": "nf_RR0",
+    "纤维板连续": "nf_FB0",
+    "胶合板连续": "nf_BB0",
+    "塑料连续": "nf_L0",
+    "PP连续": "nf_PP0",
+    "PVC连续": "nf_V0",
+    "焦炭连续": "nf_J0",
+    "焦煤连续": "nf_JM0",
+    "铁矿石连续": "nf_I0",
+    "乙二醇连续": "nf_EG0",
+    "苯乙烯连续": "nf_EB0",
+    "液化石油气连续": "nf_PG0",
+    "原木连续": "nf_LG0",
+    "纯苯连续": "nf_BZ0",
+
+    # CZCE
+    "白糖连续": "nf_SR0",
+    "棉花连续": "nf_CF0",
+    "PTA连续": "nf_TA0",
+    "菜油连续": "nf_OI0",
+    "甲醇连续": "nf_MA0",
+    "玻璃连续": "nf_FG0",
+    "菜粕连续": "nf_RM0",
+    "油菜籽连续": "nf_RS0",
+    "硅铁连续": "nf_SF0",
+    "锰硅连续": "nf_SM0",
+    "棉纱连续": "nf_CY0",
+    "苹果连续": "nf_AP0",
+    "红枣连续": "nf_CJ0",
+    "尿素连续": "nf_UR0",
+    "纯碱连续": "nf_SA0",
+    "短纤连续": "nf_PF0",
+    "花生连续": "nf_PK0",
+    "烧碱连续": "nf_SH0",
+    "对二甲苯连续": "nf_PX0",
+    "瓶片连续": "nf_PR0",
+    "丙烯连续": "nf_PL0",
 }
 
 DEFAULT_INDEX_CODES = {
@@ -341,7 +382,7 @@ def emit(rows: list[Row], fmt: str, output: str | None) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Collect raw A-share/commodity/news data only; no reports or analysis.")
+    parser = argparse.ArgumentParser(description="Collect A-share, commodity futures, index, and news data as JSON/JSONL/CSV.")
     parser.add_argument("--source", choices=["commodity-quotes", "commodity-minline", "commodity-daily", "index-quotes", "board-history", "news-eastmoney", "news-wscn", "all"], default="commodity-quotes")
     parser.add_argument("--symbols", help="Comma-separated known commodity names/codes, or name=code pairs. Defaults to built-in commodity universe.")
     parser.add_argument("--boards", help="Comma-separated A-share board names for --source board-history, e.g. 电池,贵金属,养鸡")

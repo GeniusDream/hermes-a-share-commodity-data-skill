@@ -9,6 +9,13 @@ def test_parse_symbols_known_and_custom():
     assert out['nf_PG0'] == 'nf_PG0'
 
 
+def test_default_commodity_universe_is_broad():
+    assert len(DEFAULT_COMMODITY_CODES) >= 70
+    assert DEFAULT_COMMODITY_CODES['碳酸锂连续'] == 'nf_LC0'
+    assert DEFAULT_COMMODITY_CODES['集运指数欧线连续'] == 'nf_EC0'
+    assert DEFAULT_COMMODITY_CODES['丙烯连续'] == 'nf_PL0'
+
+
 def test_emit_jsonl(tmp_path):
     path = tmp_path / 'rows.jsonl'
     emit([Row(source='test', dataset='demo', name='电池', pct_chg=-2.53)], 'jsonl', str(path))

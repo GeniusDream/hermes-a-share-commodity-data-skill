@@ -1,6 +1,6 @@
 ---
 name: a-share-data-collection
-description: "Collect raw Chinese A-share board, commodity futures, index, and news data without reports or analysis."
+description: "Collect Chinese A-share board, commodity futures, index, and news data as JSON/JSONL/CSV."
 version: 1.0.0
 author: Hermes Agent
 license: MIT
@@ -22,8 +22,6 @@ Use this skill when the user asks to **collect / scrape / fetch raw data** for C
 - Eastmoney finance news;
 - WallstreetCN live news;
 - exporting collected rows as JSON, JSONL, or CSV.
-
-Do **not** use this skill for morning/evening report generation, link scoring, investment conclusions, prediction validation, LLM audit, or self-evolution. This repository intentionally contains data-collection capability only.
 
 ## Installed command
 
@@ -123,6 +121,12 @@ $HERMES_HOME/venvs/a_share_data/bin/python \
   - `np-listapi.eastmoney.com/comm/web/getNewsByColumns` for finance news.
 - WallstreetCN:
   - `api-prod.wallstreetcn.com/apiv1/content/lives` for live news.
+
+## Default commodity universe
+
+When `--symbols` is omitted, the collector uses the built-in domestic commodity continuous-futures universe verified against Sina quotes. It currently covers 74 contracts across SHFE/INE, GFEX, DCE, and CZCE, including metals, black commodities, energy/chemicals, shipping index, new-energy materials, and agricultural products.
+
+Pass `--symbols name=code,...` to override or narrow the universe for one run.
 
 ## Collection frequency guidance
 
