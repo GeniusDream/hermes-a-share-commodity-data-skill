@@ -4,6 +4,4 @@ __pycache__/
 .env
 .DS_Store
 *.log
-reports/
-backups/
-*.sql.gz
+.pytest_cache/
