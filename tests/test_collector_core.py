@@ -1,8 +1,11 @@
 from a_share_data_collector import (
     DEFAULT_COMMODITY_CODES,
+    DEFAULT_INDEX_HISTORY_CODES,
     Row,
+    collect_commodity_universe,
     emit,
     format_board_name_rows,
+    parse_index_symbols,
     parse_symbols,
 )
 import json
@@ -53,3 +56,24 @@ def test_emit_csv(tmp_path):
     text = path.read_text(encoding='utf-8')
     assert 'source,dataset' in text
     assert '贵金属' in text
+
+
+def test_commodity_universe_rows_include_metadata():
+    rows = collect_commodity_universe({'碳酸锂连续': 'nf_LC0', '铜连续': 'nf_CU0'})
+    assert [r.dataset for r in rows] == ['commodity_universe', 'commodity_universe']
+    assert rows[0].raw['exchange'] == 'GFEX'
+    assert rows[0].raw['contract_type'] == 'continuous'
+    assert rows[1].raw['category'] == '有色/贵金属'
+
+
+def test_parse_index_symbols_known_and_custom():
+    out = parse_index_symbols('上证指数,自定义=sh000999,sh000300')
+    assert out['上证指数'] == DEFAULT_INDEX_HISTORY_CODES['上证指数']
+    assert out['自定义'] == 'sh000999'
+    assert out['sh000300'] == 'sh000300'
+
+
+def test_default_index_history_universe_has_benchmarks():
+    assert DEFAULT_INDEX_HISTORY_CODES['沪深300'] == 'sh000300'
+    assert DEFAULT_INDEX_HISTORY_CODES['中证500'] == 'sh000905'
+    assert DEFAULT_INDEX_HISTORY_CODES['中证1000'] == 'sh000852'

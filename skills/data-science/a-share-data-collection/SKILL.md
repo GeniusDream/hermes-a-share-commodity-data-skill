@@ -16,8 +16,9 @@ metadata:
 
 Use this skill when the user asks to **collect / scrape / fetch raw data** for Chinese A-share and raw-material workflows, including:
 
-- domestic commodity futures quotes, minute lines, or daily K-lines;
-- A-share index quotes;
+- domestic commodity futures quotes, minute lines, daily K-lines, or commodity-universe metadata;
+- A-share index quotes and index daily history;
+- A-share trading calendar rows;
 - A-share industry/concept board daily history;
 - A-share industry/concept board-name listing and keyword search;
 - Eastmoney finance news;
@@ -72,6 +73,15 @@ $HERMES_HOME/venvs/a_share_data/bin/python \
   --output /tmp/commodity_daily.csv
 ```
 
+### Commodity universe metadata
+
+```bash
+$HERMES_HOME/venvs/a_share_data/bin/python \
+  $HERMES_HOME/scripts/a_share_data_collector.py \
+  --source commodity-universe \
+  --format json
+```
+
 ### A-share board daily moves
 
 ```bash
@@ -102,12 +112,31 @@ $HERMES_HOME/venvs/a_share_data/bin/python \
 
 `--search-board` defaults to searching both industry and concept boards unless `--list-boards industry|concept` narrows the type.
 
-### Index quotes
+### Index quotes and index history
 
 ```bash
 $HERMES_HOME/venvs/a_share_data/bin/python \
   $HERMES_HOME/scripts/a_share_data_collector.py \
   --source index-quotes \
+  --format json
+
+$HERMES_HOME/venvs/a_share_data/bin/python \
+  $HERMES_HOME/scripts/a_share_data_collector.py \
+  --source index-history \
+  --index-symbols 沪深300,中证500 \
+  --start-date 2026-06-01 \
+  --end-date 2026-06-10 \
+  --format json
+```
+
+### A-share trading calendar
+
+```bash
+$HERMES_HOME/venvs/a_share_data/bin/python \
+  $HERMES_HOME/scripts/a_share_data_collector.py \
+  --source trading-calendar \
+  --start-date 2026-06-01 \
+  --end-date 2026-06-10 \
   --format json
 ```
 
@@ -131,7 +160,11 @@ $HERMES_HOME/venvs/a_share_data/bin/python \
   - `hq.sinajs.cn` for commodity futures quotes and A-share index quotes;
   - `InnerFuturesNewService.getMinLine` for domestic commodity minute lines;
   - `InnerFuturesNewService.getDailyKLine` for domestic commodity daily K-lines.
+- Built-in metadata:
+  - domestic commodity continuous-contract universe with exchange/category fields.
 - AKShare wrappers:
+  - `stock_zh_index_daily_em` for A-share index daily history, with `stock_zh_index_daily_tx` fallback;
+  - `tool_trade_date_hist_sina` for A-share trading-calendar rows;
   - `stock_board_industry_index_ths` for 同花顺 industry board daily history;
   - `stock_board_concept_index_ths` for 同花顺 concept board daily history.
 - Eastmoney:
@@ -153,6 +186,8 @@ This skill does not schedule jobs by itself. Suggested polling cadence for downs
 - commodity minute lines: every 5-15 minutes, or once after a target window closes;
 - board daily history: once after A-share close, or on demand for historical ranges;
 - A-share index quotes: every 1-5 minutes during A-share trading hours;
+- A-share index history: once after A-share close, or on demand for historical ranges;
+- A-share trading calendar: monthly/quarterly refresh, or on demand before alignment work;
 - news/livenews: every 5-15 minutes if monitoring events.
 
 Respect each public data source's terms of service and rate limits.
