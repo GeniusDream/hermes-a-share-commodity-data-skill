@@ -196,15 +196,31 @@ def collect_sina_minline(symbols: dict[str, str]) -> list[Row]:
             text = http_get(url, headers={"User-Agent": "Mozilla/5.0", "Referer": "https://finance.sina.com.cn"})
             payload = text[text.find("(") + 1:text.rfind(")")]
             data = json.loads(payload)
+            if not isinstance(data, list):
+                raise ValueError(f"unexpected minline payload type: {type(data).__name__}")
         except Exception as exc:
             rows.append(Row(source="sina", dataset="commodity_minline_error", name=name, code=code, raw={"error": repr(exc)}))
             continue
         for item in data:
-            ts = item.get("d") or item.get("date") or item.get("time")
+            if isinstance(item, dict):
+                ts = item.get("d") or item.get("date") or item.get("time")
+                price = item.get("p") or item.get("price")
+                volume = item.get("v") or item.get("volume")
+                raw = item
+            elif isinstance(item, list):
+                # Sina commonly returns [time, price, avg_price, volume, position, high?, date?].
+                time_part = item[0] if len(item) > 0 else None
+                date_part = item[6] if len(item) > 6 else dt.date.today().isoformat()
+                ts = f"{date_part} {time_part}" if date_part and time_part else time_part
+                price = item[1] if len(item) > 1 else None
+                volume = item[3] if len(item) > 3 else None
+                raw = {"parts": item}
+            else:
+                continue
             rows.append(Row(
                 source="sina", dataset="commodity_minline", name=name, code=code,
-                timestamp=str(ts) if ts else None, close=_to_float(item.get("p") or item.get("price")),
-                volume=_to_float(item.get("v") or item.get("volume")), raw=item,
+                timestamp=str(ts) if ts else None, close=_to_float(price),
+                volume=_to_float(volume), raw=raw,
             ))
     return rows
 
@@ -342,6 +358,7 @@ def collect_eastmoney_news(page_size: int = 50, max_pages: int = 5) -> list[Row]
         url = "https://np-listapi.eastmoney.com/comm/web/getNewsByColumns?" + urllib.parse.urlencode({
             "client": "web", "biz": "web_news_col", "column": "345", "order": "1",
             "needInteractData": "0", "page_index": str(page), "page_size": str(page_size),
+            "req_trace": str(int(time.time() * 1000)),
         })
         try:
             data = json.loads(http_get(url, headers={"User-Agent": "Mozilla/5.0", "Referer": "https://finance.eastmoney.com/"}))
